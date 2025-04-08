@@ -1,1 +1,1 @@
-# lombik
+# lombik AI IN ALPHA!
