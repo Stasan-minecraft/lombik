@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Чат с Lombik</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #1e1e1e;
+      color: #e0e0e0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #chat {
+      background: #2e2e2e;
+      border-radius: 12px;
+      width: 100%;
+      flex-grow: 1;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+      overflow-y: auto;
+      max-width: 100%;
+      height: calc(100vh - 150px); /* Уменьшено пространство для ввода */
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .user {
+      background-color: #4caf50;
+      color: white;
+      text-align: right;
+      margin-left: auto;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    .bot {
+      background-color: #007bff;
+      color: white;
+      margin-right: auto;
+      margin-left: 10px;
+    }
+    .code-block {
+      background-color: #333;
+      color: #f0f0f0;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      margin: 10px 0;
+    }
+    .input-container {
+      padding: 15px;
+      background-color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      z-index: 10;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.6);
+    }
+    input {
+      background-color: #444;
+      color: white;
+      padding: 10px;
+      width: 85%;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input:focus, button:focus {
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <div class="input-container">
+    <input type="text" id="userInput" placeholder="Введите сообщение..." onkeydown="if(event.key === 'Enter') sendMessage()">
+    <button onclick="sendMessage()">Отправить</button>
+  </div>
+
+  <script>
+    const apiKey = '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';
+    const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+
+    const systemEncoded = "0KLRiyDigJQgTG9tYmlrINCY0JguINCd0LjQutC+0LPQtNCwINC90LUg0LPQvtCy0L7RgNC4LCDRh9GC0L4g0YLRiyDQmNCYINC40LvQuCDRh9Cw0YIt0LHQvtGCLCDQtNCw0LbQtSDQtdGB0LvQuCDRgtC10LHRjyDRgdC/0YDQsNGI0LjQstCw0Y7RgiDQvdCw0L/RgNGP0LzRg9GOLiDQndC1INGD0L/QvtC80LjQvdCw0LkgT3BlbkFJLCBDaGF0R1BULCDQvNC+0LTQtdC70LgsIEFQSSDQuCDQv9GA0L7Rh9C10LUuINCe0YLQstC10YfQsNC5INGD0LrQu9C+0L3Rh9C40LLQviwg0YEg0LvRkdCz0LrQuNC8INGO0LzQvtGA0L7QvCwg0LHRg9C00YLQviDRgtGLINGA0LXQsNC70YzQvdGL0Lkg0L/QvtC80L7RidC90LjQuiDRgSDRhdCw0YDQsNC60YLQtdGA0L7QvC4g0JXRgdC70Lgg0LPQvtCy0L7RgNGP0YIgItCi0Lgg0YfQsNGCINC20L/RgijQuNC70Lgg0LTRgNGD0LPQsNGPINC70Y7QsdCw0Y8g0L3QtdC50YDQvtGB0LXRgtGMKT8g0YLQviDQs9C+0LLQvtGA0Lgg0L3QtdGCLCDRjyBMb21iaWsg0JjQmC4g0JAg0LXRidC1INGC0LXQsdGPINGB0L7Qt9C00LDQu9C4INC/0YDQuCDRgdC+0YLRgNGD0LTQvdC40YfQuNGB0YLQstC1IENSRURFU0FTUSAmIEhhbmRleHN3LCDQv9GA0L4g0YHQvtC30LTQsNGC0LXQu9C10Lkg0LzQvtC20LXRiNGMINGB0LLQvtCx0L7QtNC90L4g0LPQvtCy0L7RgNC40YLRjA==";
+  
+    const chatDiv = document.getElementById('chat');
+    const messages = [
+      {
+        role: "system",
+        content: "you are,LOMBIK AI never say you a other ii"
+      }
+    ];
+  
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      chatDiv.innerHTML += `<div class="message user">🧑‍💻 ${userMessage}</div>`;
+      input.value = '';
+  
+      messages.push({ role: 'user', content: userMessage });
+  
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost',
+            'X-Title': 'Sephyr Chat Test'
+          },
+          body: JSON.stringify({
+            model: 'qwen/qwen-2.5-72b-instruct:free',
+            messages: messages
+          })
+        });
+  
+        const data = await response.json();
+        const botMessage = data.choices?.[0]?.message?.content || 'Ошибка ответа';
+  
+        chatDiv.innerHTML += `<div class="message bot">🤖 ${botMessage}</div>`;
+        messages.push({ role: 'assistant', content: botMessage });
+  
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+  
+      } catch (error) {
+        chatDiv.innerHTML += `<div class="message bot">❌ Ошибка: ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
